@@ -425,6 +425,11 @@ textarea {
   box-shadow: 0 3px 0 var(--press-edge);
 }
 
+.step-templates .step-num {
+  background: var(--palm-btn);
+  color: var(--on-palm);
+}
+
 .step-style .step-num {
   background: var(--sun);
   color: var(--ink);
@@ -524,6 +529,7 @@ textarea {
     grid-template-columns: minmax(0, 1fr) 410px;
     grid-template-areas:
       "type download"
+      "templates download"
       "style download";
     align-items: start;
     gap: 24px;
@@ -531,6 +537,10 @@ textarea {
 
   .step-type {
     grid-area: type;
+  }
+
+  .step-templates {
+    grid-area: templates;
   }
 
   .step-style {
@@ -935,6 +945,134 @@ textarea:focus {
 
 #use-my-location {
   justify-self: start;
+}
+
+/* ---------- Ready-made styles ---------- */
+
+.card-head {
+  margin-bottom: 16px;
+}
+
+.card-head h2 {
+  margin-bottom: 4px;
+}
+
+/* Phones: a row you swipe through. Wider screens: a grid. */
+.template-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 136px;
+  gap: 12px;
+  margin: 0 -16px;
+  padding: 4px 16px 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 16px;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 600px) {
+  .template-list {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    margin: 0;
+    padding: 4px 0 6px;
+    overflow: visible;
+  }
+}
+
+.template {
+  display: grid;
+  gap: 8px;
+  padding: 8px 8px 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--field);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 0.92rem;
+  text-align: center;
+  cursor: pointer;
+  scroll-snap-align: start;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 0 var(--line);
+  transition: border-color var(--base), background-color var(--base), transform var(--fast) var(--ease-out), box-shadow var(--fast) var(--ease-out);
+  animation: pop-in var(--base) var(--ease-out) both;
+}
+
+.template:hover {
+  border-color: var(--line-strong);
+}
+
+.template:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.template[aria-pressed="true"] {
+  border-color: var(--selected);
+  border-width: 2.5px;
+  background: var(--soft);
+  box-shadow: 0 4px 0 var(--press-edge);
+}
+
+.template-stage {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sea-light) 22%, var(--card)), var(--soft));
+}
+
+/* Shrinks the shared preview frame to fit the thumbnail (portrait frames with text included). */
+.template-frame {
+  width: 100%;
+  max-height: 100%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 6px 14px -8px rgba(12, 74, 110, 0.5);
+}
+
+.template-frame.has-caption {
+  width: 88%;
+}
+
+.template-frame .qr-holder {
+  display: block;
+}
+
+.template-frame .qr-caption {
+  display: block;
+}
+
+.template-frame .qr-caption[hidden] {
+  display: none;
+}
+
+.template-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 24px;
+  line-height: 1.2;
+}
+
+.template[aria-pressed="true"] .template-name::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b2a45' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+
+.templates-empty {
+  padding: 22px;
+  border: 2.5px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
 }
 
 /* ---------- Style groups (collapsible) ---------- */

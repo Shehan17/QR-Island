@@ -59,8 +59,9 @@
         <p class="lead">Pick a type, style it, then download. Everything stays on your device.</p>
         <ol class="steps-strip" aria-label="How it works">
           <li><span class="steps-num">1</span>Type</li>
-          <li><span class="steps-num">2</span>Style</li>
-          <li><span class="steps-num">3</span>Download</li>
+          <li><span class="steps-num">2</span>Pick a style</li>
+          <li><span class="steps-num">3</span>Customize</li>
+          <li><span class="steps-num">4</span>Download</li>
         </ol>
       </div>
       <svg class="hero-art" viewBox="0 0 260 190" aria-hidden="true">
@@ -204,9 +205,19 @@
         </form>
       </section>
 
-      <!-- Step 2: Style -->
-      <section class="card step-style" aria-labelledby="step2-title">
-        <h2 id="step2-title"><span class="step-num">2</span> Style</h2>
+      <!-- Step 2: Ready-made styles -->
+      <section class="card step-templates" aria-labelledby="templates-title">
+        <div class="card-head">
+          <h2 id="templates-title"><span class="step-num">2</span> Pick a style</h2>
+          <p class="hint">Tap a design to use it. You can change anything after, or pick another one any time.</p>
+        </div>
+        <div class="template-list" id="template-list" role="group" aria-labelledby="templates-title" hidden></div>
+        <p class="templates-empty" id="templates-empty">Fill in step 1 to see your QR code in different styles.</p>
+      </section>
+
+      <!-- Step 3: Customize -->
+      <section class="card step-style" aria-labelledby="step-style-title">
+        <h2 id="step-style-title"><span class="step-num">3</span> Customize</h2>
 
         <details class="style-group" id="group-colors" open>
           <summary>
@@ -458,7 +469,7 @@
 
       <!-- Preview + Step 3: Download -->
       <section class="card step-download" aria-labelledby="step3-title">
-        <h2 id="step3-title"><span class="step-num">3</span> Preview and download</h2>
+        <h2 id="step3-title"><span class="step-num">4</span> Preview and download</h2>
 
         <div class="preview" id="preview">
           <div class="qr-frame" id="qr-frame">

@@ -12,9 +12,10 @@
 
 ### ✨ What it does
 
-**Type → Style → Download.** That's it.
+**Type → Pick a style → Customize → Download.** That's it.
 
 - 🔗 **6 QR types:** Link, Text, WiFi, Contact, WhatsApp, Location
+- 🏝️ **12 ready-made styles:** see your own code in every design, tap one, then tweak it
 - 🎨 **Your style:** solid or gradient colors, 6 dot shapes, corner styles and colors, transparent background
 - 🖼️ **Make it yours:** add your logo, a frame or border, and a label like "Scan me" (pick font, size, color, above or below)
 - 🌊 **Ready-made looks:** Ocean Blue, Sunset Orange, Palm Green, Coral Reef, Lagoon, Tropical

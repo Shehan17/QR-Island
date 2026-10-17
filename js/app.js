@@ -42,6 +42,25 @@
     tropical: { fg: '#c2410c', fg2: '#a3165a', bg: '#fff5ea' }
   };
 
+  // Ready-made designs for step 2. Each one is a full style; fields left out use the defaults.
+  // A template caption is only used when you haven't typed your own text.
+  var TEMPLATES = [
+    { id: 'classic', name: 'Classic', style: {} },
+    { id: 'ocean', name: 'Ocean', style: { fg: '#0b4f6c', bg: '#e6f5fa', shape: 'rounded', cornerShape: 'rounded', frame: 'rounded' } },
+    { id: 'sunset', name: 'Sunset', style: { fill: 'gradient', fg: '#c2410c', fg2: '#be185d', bg: '#fff4e6', shape: 'dots', cornerShape: 'circle', frame: 'rounded', caption: 'Scan me' } },
+    { id: 'palm', name: 'Palm Leaf', style: { fg: '#1d6a3a', bg: '#edf8ef', shape: 'classy-rounded', cornerShape: 'rounded', frame: 'rounded' } },
+    { id: 'lagoon', name: 'Lagoon', style: { fill: 'gradient', gradientType: 'radial', fg: '#0b6e79', fg2: '#1d3f94', bg: '#eaf7f8', shape: 'extra-rounded', cornerShape: 'rounded', frame: 'border', caption: 'Scan me' } },
+    { id: 'coral', name: 'Coral Reef', style: { fg: '#a8233d', bg: '#fff0f1', shape: 'rounded', cornerShape: 'rounded', cornerColorOn: true, cornerColor: '#0b2a45', frame: 'rounded' } },
+    { id: 'golden', name: 'Golden Hour', style: { fg: '#0b2a45', bg: '#fdf6e3', shape: 'classy', cornerShape: 'square', cornerColorOn: true, cornerColor: '#b45309', frame: 'border', captionFont: 'classic', caption: 'Scan me' } },
+    { id: 'sandy', name: 'Sandy', style: { fg: '#7c4a1e', bg: '#fbf1dc', shape: 'rounded', cornerShape: 'square', margin: 'large' } },
+    { id: 'bubble', name: 'Bubble', style: { fill: 'gradient', gradientType: 'down', fg: '#5b21b6', fg2: '#0e7490', bg: '#f5f3ff', shape: 'rounded', cornerShape: 'circle', frame: 'rounded' } },
+    { id: 'tropical', name: 'Tropical', style: { fill: 'gradient', fg: '#c2410c', fg2: '#a3165a', bg: '#fff5ea', shape: 'classy-rounded', cornerShape: 'circle', frame: 'rounded', caption: 'Scan me', captionFont: 'clean' } },
+    { id: 'clear', name: 'Clear', style: { fg: '#111827', transparent: true, shape: 'extra-rounded', cornerShape: 'rounded' } },
+    { id: 'bold', name: 'Bold', style: { fg: '#000000', shape: 'square', cornerShape: 'square', frame: 'border', margin: 'small', caption: 'SCAN ME', captionFont: 'clean', captionSize: 'large' } }
+  ];
+  var TEMPLATE_BY_ID = {};
+  TEMPLATES.forEach(function (t) { TEMPLATE_BY_ID[t.id] = t; });
+
   // Dot shape → library dot type, plus the corners used for "Match dots".
   var SHAPES = {
     square: { dots: 'square', corner: 'square', cornerDot: 'square' },
@@ -98,7 +117,8 @@
       captionSize: 'medium',
       captionColorOn: false,
       captionColor: '#0e7c86',
-      pngSize: 'medium'
+      pngSize: 'medium',
+      template: 'classic'
     };
   }
 
@@ -124,6 +144,8 @@
     captionOptions: $('caption-options'),
     captionColorField: $('caption-color-field'),
     pngSizeHint: $('png-size-hint'),
+    templateList: $('template-list'),
+    templatesEmpty: $('templates-empty'),
     presets: Array.prototype.slice.call(document.querySelectorAll('.preset')),
     logoInput: $('logo-input'),
     logoThumb: $('logo-thumb'),
@@ -347,14 +369,17 @@
     els.downloadSvg.disabled = !valid;
     els.save.disabled = !valid;
     renderMini(valid ? result.data : null);
+    scheduleTemplates();
+    updateTemplateButtons();
   }
 
   var scheduleRender = debounce(render, 90);
 
-  // Gives the preview the same proportions as the downloaded image.
-  function renderFrame(style) {
+  // Gives a preview frame the same proportions as the downloaded image.
+  function renderFrame(style, frame, captionOut) {
+    frame = frame || els.frame;
+    captionOut = captionOut || els.captionOut;
     var layout = exportLayout(style);
-    var frame = els.frame;
     var w = layout.width;
     frame.style.backgroundColor = style.transparent ? '' : style.bg;
     frame.classList.toggle('checker', style.transparent);
@@ -368,11 +393,99 @@
     frame.style.setProperty('--border-w', (layout.border / w * 100) + 'cqi');
     frame.style.setProperty('--border-c', style.fg);
     frame.style.setProperty('--cap-h', (layout.captionHeight / w * 100) + 'cqi');
-    els.captionOut.hidden = !layout.caption;
-    els.captionOut.textContent = layout.caption;
-    els.captionOut.style.color = captionColor(style);
-    els.captionOut.style.fontFamily = layout.font;
-    els.captionOut.style.fontSize = (layout.fontSize / w * 100) + 'cqi';
+    captionOut.hidden = !layout.caption;
+    captionOut.textContent = layout.caption;
+    captionOut.style.color = captionColor(style);
+    captionOut.style.fontFamily = layout.font;
+    captionOut.style.fontSize = (layout.fontSize / w * 100) + 'cqi';
+  }
+
+  // ---------- Ready-made styles ----------
+
+  // The caption you typed yourself (not one that came from a template).
+  function ownCaption(style) {
+    var t = TEMPLATE_BY_ID[style.template];
+    var caption = String(style.caption || '');
+    return t && t.style.caption && caption === t.style.caption ? '' : caption;
+  }
+
+  // The full style a template gives, keeping your logo, your text and the PNG size.
+  function templateStyle(t) {
+    var current = state.style;
+    var style = Object.assign(defaultStyle(), clone(t.style));
+    style.logo = current.logo;
+    style.logoSize = current.logoSize;
+    style.pngSize = current.pngSize;
+    style.caption = ownCaption(current) || t.style.caption || '';
+    style.template = t.id;
+    return style;
+  }
+
+  var templateButtons = TEMPLATES.map(function (t) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'template';
+    button.dataset.template = t.id;
+    button.setAttribute('aria-pressed', 'false');
+    var stage = document.createElement('span');
+    stage.className = 'template-stage';
+    stage.setAttribute('aria-hidden', 'true');
+    var frame = document.createElement('span');
+    frame.className = 'qr-frame template-frame';
+    var holder = document.createElement('span');
+    holder.className = 'qr-holder';
+    var caption = document.createElement('span');
+    caption.className = 'qr-caption';
+    frame.appendChild(holder);
+    frame.appendChild(caption);
+    stage.appendChild(frame);
+    var name = document.createElement('span');
+    name.className = 'template-name';
+    name.textContent = t.name;
+    button.appendChild(stage);
+    button.appendChild(name);
+    button.addEventListener('click', function () { applyTemplate(t); });
+    els.templateList.appendChild(button);
+    return { template: t, button: button, frame: frame, holder: holder, caption: caption };
+  });
+
+  // Thumbnails only depend on the content, the logo and your own text.
+  var templatesKey = null;
+
+  function renderTemplates() {
+    var data = state.result.data;
+    els.templateList.hidden = !data;
+    els.templatesEmpty.hidden = !!data;
+    if (!data) {
+      templatesKey = null;
+      return;
+    }
+    var logo = state.style.logo;
+    var key = [data, logo ? logo.length + logo.slice(-40) : '', state.style.logoSize, ownCaption(state.style)].join('|');
+    if (key === templatesKey) return;
+    templatesKey = key;
+    templateButtons.forEach(function (item) {
+      var style = templateStyle(item.template);
+      var built = makeQr(data, style, THUMB_SIZE);
+      item.holder.textContent = '';
+      if (built.qr) built.qr.append(item.holder);
+      renderFrame(style, item.frame, item.caption);
+    });
+  }
+
+  var scheduleTemplates = debounce(renderTemplates, 200);
+
+  function updateTemplateButtons() {
+    templateButtons.forEach(function (item) {
+      item.button.setAttribute('aria-pressed', item.template.id === state.style.template ? 'true' : 'false');
+    });
+  }
+
+  function applyTemplate(t) {
+    state.style = templateStyle(t);
+    writeStyle();
+    render();
+    toast(t.name + ' style applied. Change anything in step 3.');
   }
 
   function captionColor(style) {
@@ -624,7 +737,7 @@
     var keep = state.style;
     state.style = defaultStyle();
     state.style.logo = keep.logo;
-    state.style.caption = keep.caption;
+    state.style.caption = ownCaption(keep);
     writeStyle();
     render();
     toast('Style reset');
@@ -926,7 +1039,8 @@
 
   // Codes saved before newer style options existed get the defaults for them.
   function recordStyle(record) {
-    return Object.assign(defaultStyle(), clone(record.style || {}));
+    // Codes saved before templates existed did not pick one.
+    return Object.assign(defaultStyle(), { template: null }, clone(record.style || {}));
   }
 
   function currentRecord(id) {
