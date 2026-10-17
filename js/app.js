@@ -9,12 +9,21 @@
   var STORAGE_KEY = 'qr-island-codes';
   var THEME_KEY = 'qr-island-theme';
   var SVG_NS = 'http://www.w3.org/2000/svg';
-  var FONT = '"Trebuchet MS", "Segoe UI", Arial, Helvetica, sans-serif';
 
-  // Export layout (pixels): QR size, quiet-zone padding, caption size.
+  // Export layout, in pixels for a 1000px QR code (everything scales with the PNG size).
   var EXPORT_SIZE = 1000;
-  var EXPORT_PAD = 80;
-  var CAPTION_FONT = 72;
+  var PADDING = { small: 40, medium: 80, large: 140 };
+  var CAPTION_SIZES = { small: 54, medium: 72, large: 92 };
+  var FRAME_RADIUS = 70;
+  var BORDER_WIDTH = 16;
+  var PNG_SIZES = { small: 500, medium: 1000, large: 2000 };
+
+  var FONTS = {
+    friendly: '"Trebuchet MS", "Segoe UI", Arial, Helvetica, sans-serif',
+    clean: 'Helvetica, Arial, sans-serif',
+    classic: 'Georgia, "Times New Roman", serif',
+    typewriter: '"Courier New", Courier, monospace'
+  };
 
   // Logo sizes above this cover too many dots to scan reliably.
   var MAX_SAFE_LOGO = 0.5;
@@ -23,16 +32,56 @@
   var THUMB_SIZE = 240;
   var MIN_CONTRAST = 3;
 
+  // Presets with fg2 use a gradient from fg to fg2.
   var PRESETS = {
     ocean: { fg: '#0b4f6c', bg: '#e6f5fa' },
     sunset: { fg: '#b4410f', bg: '#fff1e3' },
-    palm: { fg: '#1d6a3a', bg: '#edf8ef' }
+    palm: { fg: '#1d6a3a', bg: '#edf8ef' },
+    coral: { fg: '#a8233d', bg: '#fff0f1' },
+    lagoon: { fg: '#0b6e79', fg2: '#1d3f94', bg: '#eaf7f8' },
+    tropical: { fg: '#c2410c', fg2: '#a3165a', bg: '#fff5ea' }
   };
 
+  // Ready-made designs for step 2. Each one is a full style; fields left out use the defaults.
+  // A template caption is only used when you haven't typed your own text.
+  var TEMPLATES = [
+    { id: 'classic', name: 'Classic', style: {} },
+    { id: 'ocean', name: 'Ocean', style: { fg: '#0b4f6c', bg: '#e6f5fa', shape: 'rounded', cornerShape: 'rounded', frame: 'rounded' } },
+    { id: 'sunset', name: 'Sunset', style: { fill: 'gradient', fg: '#c2410c', fg2: '#be185d', bg: '#fff4e6', shape: 'dots', cornerShape: 'circle', frame: 'rounded', caption: 'Scan me' } },
+    { id: 'palm', name: 'Palm Leaf', style: { fg: '#1d6a3a', bg: '#edf8ef', shape: 'classy-rounded', cornerShape: 'rounded', frame: 'rounded' } },
+    { id: 'lagoon', name: 'Lagoon', style: { fill: 'gradient', gradientType: 'radial', fg: '#0b6e79', fg2: '#1d3f94', bg: '#eaf7f8', shape: 'extra-rounded', cornerShape: 'rounded', frame: 'border', caption: 'Scan me' } },
+    { id: 'coral', name: 'Coral Reef', style: { fg: '#a8233d', bg: '#fff0f1', shape: 'rounded', cornerShape: 'rounded', cornerColorOn: true, cornerColor: '#0b2a45', frame: 'rounded' } },
+    { id: 'golden', name: 'Golden Hour', style: { fg: '#0b2a45', bg: '#fdf6e3', shape: 'classy', cornerShape: 'square', cornerColorOn: true, cornerColor: '#b45309', frame: 'border', captionFont: 'classic', caption: 'Scan me' } },
+    { id: 'sandy', name: 'Sandy', style: { fg: '#7c4a1e', bg: '#fbf1dc', shape: 'rounded', cornerShape: 'square', margin: 'large' } },
+    { id: 'bubble', name: 'Bubble', style: { fill: 'gradient', gradientType: 'down', fg: '#5b21b6', fg2: '#0e7490', bg: '#f5f3ff', shape: 'rounded', cornerShape: 'circle', frame: 'rounded' } },
+    { id: 'tropical', name: 'Tropical', style: { fill: 'gradient', fg: '#c2410c', fg2: '#a3165a', bg: '#fff5ea', shape: 'classy-rounded', cornerShape: 'circle', frame: 'rounded', caption: 'Scan me', captionFont: 'clean' } },
+    { id: 'clear', name: 'Clear', style: { fg: '#111827', transparent: true, shape: 'extra-rounded', cornerShape: 'rounded' } },
+    { id: 'bold', name: 'Bold', style: { fg: '#000000', shape: 'square', cornerShape: 'square', frame: 'border', margin: 'small', caption: 'SCAN ME', captionFont: 'clean', captionSize: 'large' } }
+  ];
+  var TEMPLATE_BY_ID = {};
+  TEMPLATES.forEach(function (t) { TEMPLATE_BY_ID[t.id] = t; });
+
+  // Dot shape → library dot type, plus the corners used for "Match dots".
   var SHAPES = {
     square: { dots: 'square', corner: 'square', cornerDot: 'square' },
     rounded: { dots: 'rounded', corner: 'extra-rounded', cornerDot: 'dot' },
-    dots: { dots: 'dots', corner: 'dot', cornerDot: 'dot' }
+    dots: { dots: 'dots', corner: 'dot', cornerDot: 'dot' },
+    classy: { dots: 'classy', corner: 'extra-rounded', cornerDot: 'square' },
+    'classy-rounded': { dots: 'classy-rounded', corner: 'extra-rounded', cornerDot: 'dot' },
+    'extra-rounded': { dots: 'extra-rounded', corner: 'extra-rounded', cornerDot: 'dot' }
+  };
+
+  var CORNERS = {
+    square: { corner: 'square', cornerDot: 'square' },
+    rounded: { corner: 'extra-rounded', cornerDot: 'dot' },
+    circle: { corner: 'dot', cornerDot: 'dot' }
+  };
+
+  var GRADIENTS = {
+    diagonal: { type: 'linear', rotation: Math.PI / 4 },
+    across: { type: 'linear', rotation: 0 },
+    down: { type: 'linear', rotation: Math.PI / 2 },
+    radial: { type: 'radial', rotation: 0 }
   };
 
   function defaultFields() {
@@ -47,7 +96,30 @@
   }
 
   function defaultStyle() {
-    return { fg: '#12343b', bg: '#ffffff', shape: 'square', logo: null, logoSize: 0.4, caption: '' };
+    return {
+      fg: '#12343b',
+      bg: '#ffffff',
+      fill: 'solid',
+      fg2: '#0e7c86',
+      gradientType: 'diagonal',
+      cornerColorOn: false,
+      cornerColor: '#c2410c',
+      transparent: false,
+      shape: 'square',
+      cornerShape: 'auto',
+      logo: null,
+      logoSize: 0.4,
+      frame: 'none',
+      margin: 'medium',
+      caption: '',
+      captionPos: 'below',
+      captionFont: 'friendly',
+      captionSize: 'medium',
+      captionColorOn: false,
+      captionColor: '#0e7c86',
+      pngSize: 'medium',
+      template: 'classic'
+    };
   }
 
   var state = {
@@ -63,10 +135,17 @@
   var els = {
     tabs: Array.prototype.slice.call(document.querySelectorAll('.type-tab')),
     panels: Array.prototype.slice.call(document.querySelectorAll('.type-panel')),
-    fg: $('fg-color'),
+    styleInputs: Array.prototype.slice.call(document.querySelectorAll('[data-style]')),
+    colorValues: Array.prototype.slice.call(document.querySelectorAll('[data-color-for]')),
     bg: $('bg-color'),
-    fgValue: $('fg-color-value'),
-    bgValue: $('bg-color-value'),
+    fgLabel: $('fg-label'),
+    gradientOptions: $('gradient-options'),
+    cornerColorField: $('corner-color-field'),
+    captionOptions: $('caption-options'),
+    captionColorField: $('caption-color-field'),
+    pngSizeHint: $('png-size-hint'),
+    templateList: $('template-list'),
+    templatesEmpty: $('templates-empty'),
     presets: Array.prototype.slice.call(document.querySelectorAll('.preset')),
     logoInput: $('logo-input'),
     logoThumb: $('logo-thumb'),
@@ -75,7 +154,6 @@
     logoSizeField: $('logo-size-field'),
     logoSize: $('logo-size'),
     logoSizeValue: $('logo-size-value'),
-    caption: $('caption'),
     preview: $('preview'),
     frame: $('qr-frame'),
     holder: $('qr-holder'),
@@ -155,6 +233,24 @@
 
   function qrOptions(data, style, size) {
     var shape = SHAPES[style.shape] || SHAPES.square;
+    var corners = CORNERS[style.cornerShape] || shape;
+    var dotsOptions = { color: style.fg, type: shape.dots };
+    if (style.fill === 'gradient') {
+      var g = GRADIENTS[style.gradientType] || GRADIENTS.diagonal;
+      dotsOptions.gradient = {
+        type: g.type,
+        rotation: g.rotation,
+        colorStops: [{ offset: 0, color: style.fg }, { offset: 1, color: style.fg2 }]
+      };
+    }
+    var cornersSquareOptions = { type: corners.corner };
+    var cornersDotOptions = { type: corners.cornerDot };
+    // Corners without their own color share the dots' color (and gradient).
+    if (style.cornerColorOn) {
+      cornersSquareOptions.color = cornersDotOptions.color = style.cornerColor;
+    } else if (style.fill !== 'gradient') {
+      cornersSquareOptions.color = cornersDotOptions.color = style.fg;
+    }
     var options = {
       width: size,
       height: size,
@@ -162,10 +258,10 @@
       data: toQrBytes(data),
       margin: 0,
       qrOptions: { errorCorrectionLevel: style.logo ? 'H' : 'Q' },
-      dotsOptions: { color: style.fg, type: shape.dots },
-      cornersSquareOptions: { color: style.fg, type: shape.corner },
-      cornersDotOptions: { color: style.fg, type: shape.cornerDot },
-      backgroundOptions: { color: style.bg }
+      dotsOptions: dotsOptions,
+      cornersSquareOptions: cornersSquareOptions,
+      cornersDotOptions: cornersDotOptions,
+      backgroundOptions: { color: style.transparent ? 'rgba(0,0,0,0)' : style.bg }
     };
     if (style.logo) {
       options.image = style.logo;
@@ -192,17 +288,29 @@
 
   function scanProblems(style) {
     var problems = [];
-    var ratio = C.contrastRatio(style.fg, style.bg);
-    if (ratio < MIN_CONTRAST) {
-      problems.push('Low contrast: the QR color and background are too alike. Use a darker QR color or a lighter background.');
-    } else if (C.luminance(style.fg) > C.luminance(style.bg)) {
+    // A transparent code is meant for light backgrounds, so check it against white.
+    var bg = style.transparent ? '#ffffff' : style.bg;
+    if (C.contrastRatio(style.fg, bg) < MIN_CONTRAST) {
+      problems.push(style.transparent
+        ? 'Low contrast: the QR color is too light to read on a light background. Use a darker QR color.'
+        : 'Low contrast: the QR color and background are too alike. Use a darker QR color or a lighter background.');
+    } else if (C.luminance(style.fg) > C.luminance(bg)) {
       problems.push('The QR color is lighter than the background. Many phones can’t read this. Use a dark QR color on a light background.');
+    }
+    if (style.fill === 'gradient' && C.contrastRatio(style.fg2, bg) < MIN_CONTRAST) {
+      problems.push('Low contrast: the gradient end color is too close to the background. Pick a darker end color.');
+    }
+    if (style.cornerColorOn && C.contrastRatio(style.cornerColor, bg) < MIN_CONTRAST) {
+      problems.push('Low contrast: the corner color is too close to the background. Pick a darker corner color.');
     }
     if (style.logo && style.logoSize > MAX_SAFE_LOGO) {
       problems.push('The logo is too big and hides too much of the code. Make the logo smaller.');
     }
     return problems;
   }
+
+  var ICON_OK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var ICON_WARN = '<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>';
 
   function renderScanCheck(valid) {
     var el = els.scanCheck;
@@ -217,11 +325,11 @@
     var icon = document.createElement('span');
     icon.className = 'scan-check-icon';
     icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = problems.length ? '!' : '✓';
+    icon.innerHTML = problems.length ? ICON_WARN : ICON_OK;
     el.appendChild(icon);
     var body = document.createElement('span');
     if (!problems.length) {
-      body.textContent = 'Good, this will scan';
+      body.textContent = state.style.transparent ? 'Good, this will scan on a light background' : 'Good, this will scan';
     } else {
       problems.forEach(function (p, i) {
         if (i) body.appendChild(document.createElement('br'));
@@ -253,14 +361,7 @@
 
     if (valid) {
       built.qr.append(els.holder);
-      els.frame.style.background = style.bg;
-      // Same proportions as the downloaded image, so the preview matches it.
-      var layout = exportLayout(style);
-      els.frame.classList.toggle('has-caption', !!layout.caption);
-      els.captionOut.hidden = !layout.caption;
-      els.captionOut.textContent = layout.caption;
-      els.captionOut.style.color = style.fg;
-      if (layout.caption) els.captionOut.style.fontSize = (layout.fontSize / layout.width * 100) + 'cqi';
+      renderFrame(style);
     }
 
     renderScanCheck(valid);
@@ -268,9 +369,134 @@
     els.downloadSvg.disabled = !valid;
     els.save.disabled = !valid;
     renderMini(valid ? result.data : null);
+    scheduleTemplates();
+    updateTemplateButtons();
   }
 
   var scheduleRender = debounce(render, 90);
+
+  // Gives a preview frame the same proportions as the downloaded image.
+  function renderFrame(style, frame, captionOut) {
+    frame = frame || els.frame;
+    captionOut = captionOut || els.captionOut;
+    var layout = exportLayout(style);
+    var w = layout.width;
+    frame.style.backgroundColor = style.transparent ? '' : style.bg;
+    frame.classList.toggle('checker', style.transparent);
+    frame.classList.toggle('has-caption', !!layout.caption);
+    frame.classList.toggle('caption-above', layout.above);
+    frame.classList.toggle('has-border', !!layout.border);
+    frame.style.borderRadius = layout.radius
+      ? (layout.radius / w * 100) + '% / ' + (layout.radius / layout.height * 100) + '%'
+      : '';
+    frame.style.setProperty('--pad', (layout.pad / w * 100) + '%');
+    frame.style.setProperty('--border-w', (layout.border / w * 100) + 'cqi');
+    frame.style.setProperty('--border-c', style.fg);
+    frame.style.setProperty('--cap-h', (layout.captionHeight / w * 100) + 'cqi');
+    captionOut.hidden = !layout.caption;
+    captionOut.textContent = layout.caption;
+    captionOut.style.color = captionColor(style);
+    captionOut.style.fontFamily = layout.font;
+    captionOut.style.fontSize = (layout.fontSize / w * 100) + 'cqi';
+  }
+
+  // ---------- Ready-made styles ----------
+
+  // The caption you typed yourself (not one that came from a template).
+  function ownCaption(style) {
+    var t = TEMPLATE_BY_ID[style.template];
+    var caption = String(style.caption || '');
+    return t && t.style.caption && caption === t.style.caption ? '' : caption;
+  }
+
+  // The full style a template gives, keeping your logo, your text and the PNG size.
+  function templateStyle(t) {
+    var current = state.style;
+    var style = Object.assign(defaultStyle(), clone(t.style));
+    style.logo = current.logo;
+    style.logoSize = current.logoSize;
+    style.pngSize = current.pngSize;
+    style.caption = ownCaption(current) || t.style.caption || '';
+    style.template = t.id;
+    return style;
+  }
+
+  var templateButtons = TEMPLATES.map(function (t) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'template';
+    button.dataset.template = t.id;
+    button.setAttribute('aria-pressed', 'false');
+    var stage = document.createElement('span');
+    stage.className = 'template-stage';
+    stage.setAttribute('aria-hidden', 'true');
+    var frame = document.createElement('span');
+    frame.className = 'qr-frame template-frame';
+    var holder = document.createElement('span');
+    holder.className = 'qr-holder';
+    var caption = document.createElement('span');
+    caption.className = 'qr-caption';
+    frame.appendChild(holder);
+    frame.appendChild(caption);
+    stage.appendChild(frame);
+    var name = document.createElement('span');
+    name.className = 'template-name';
+    name.textContent = t.name;
+    button.appendChild(stage);
+    button.appendChild(name);
+    button.addEventListener('click', function () { applyTemplate(t); });
+    els.templateList.appendChild(button);
+    return { template: t, button: button, frame: frame, holder: holder, caption: caption };
+  });
+
+  // Thumbnails only depend on the content, the logo and your own text.
+  var templatesKey = null;
+
+  function renderTemplates() {
+    var data = state.result.data;
+    els.templateList.hidden = !data;
+    els.templatesEmpty.hidden = !!data;
+    if (!data) {
+      templatesKey = null;
+      return;
+    }
+    var logo = state.style.logo;
+    var key = [data, logo ? logo.length + logo.slice(-40) : '', state.style.logoSize, ownCaption(state.style)].join('|');
+    if (key === templatesKey) return;
+    templatesKey = key;
+    templateButtons.forEach(function (item) {
+      var style = templateStyle(item.template);
+      var built = makeQr(data, style, THUMB_SIZE);
+      item.holder.textContent = '';
+      if (built.qr) built.qr.append(item.holder);
+      renderFrame(style, item.frame, item.caption);
+    });
+  }
+
+  var scheduleTemplates = debounce(renderTemplates, 200);
+
+  function updateTemplateButtons() {
+    templateButtons.forEach(function (item) {
+      item.button.setAttribute('aria-pressed', item.template.id === state.style.template ? 'true' : 'false');
+    });
+  }
+
+  function applyTemplate(t) {
+    state.style = templateStyle(t);
+    writeStyle();
+    render();
+    toast(t.name + ' style applied. Change anything in step 3.');
+  }
+
+  function captionColor(style) {
+    return style.captionColorOn ? style.captionColor : style.fg;
+  }
+
+  // Background for small previews: the QR background, or a checkerboard if transparent.
+  function paintBackground(el, style) {
+    el.style.backgroundColor = style.transparent ? '' : style.bg;
+    el.classList.toggle('checker', !!style.transparent);
+  }
 
   // ---------- Mini preview (phones) ----------
 
@@ -281,7 +507,7 @@
     if (data) {
       var built = makeQr(data, state.style, THUMB_SIZE);
       if (built.qr) built.qr.append(els.miniQr);
-      els.mini.style.background = state.style.bg;
+      paintBackground(els.mini, state.style);
     }
     updateMiniVisibility();
   }
@@ -392,25 +618,71 @@
 
   // ---------- Style controls ----------
 
+  // Every style control has data-style="<key in state.style>".
+  function readStyleInput(input) {
+    var key = input.dataset.style;
+    if (input.type === 'radio') {
+      if (input.checked) state.style[key] = input.value;
+    } else if (input.type === 'checkbox') {
+      state.style[key] = input.checked;
+    } else if (input.type === 'range') {
+      state.style[key] = parseFloat(input.value);
+    } else {
+      state.style[key] = input.value;
+    }
+  }
+
   function writeStyle() {
     var s = state.style;
-    els.fg.value = s.fg;
-    els.bg.value = s.bg;
-    els.fgValue.textContent = s.fg.toUpperCase();
-    els.bgValue.textContent = s.bg.toUpperCase();
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="dot-shape"]'), function (r) {
-      r.checked = r.value === s.shape;
+    els.styleInputs.forEach(function (input) {
+      var value = s[input.dataset.style];
+      if (input.type === 'radio') input.checked = input.value === value;
+      else if (input.type === 'checkbox') input.checked = !!value;
+      else input.value = value == null ? '' : value;
     });
-    els.caption.value = s.caption;
-    els.logoSize.value = s.logoSize;
     updateLogoUi();
+    updateStyleUi();
+    openUsedGroups();
+  }
+
+  // Opens the style groups that hold non-default settings, so nothing is hidden.
+  function openUsedGroups() {
+    var s = state.style;
+    var d = defaultStyle();
+    if (s.logo) $('group-logo').open = true;
+    if (String(s.caption || '').trim()) $('group-text').open = true;
+    if (s.frame !== d.frame || s.margin !== d.margin) $('group-frame').open = true;
+  }
+
+  // Shows and hides the extra fields, and refreshes labels that follow the style.
+  function updateStyleUi() {
+    var s = state.style;
+    els.colorValues.forEach(function (span) {
+      span.textContent = String(s[span.dataset.colorFor]).toUpperCase();
+    });
+    var gradient = s.fill === 'gradient';
+    els.fgLabel.textContent = gradient ? 'Start color' : 'QR color';
+    els.gradientOptions.hidden = !gradient;
+    els.cornerColorField.hidden = !s.cornerColorOn;
+    els.bg.disabled = !!s.transparent;
+    els.bg.closest('.color-field').classList.toggle('is-off', !!s.transparent);
+    els.captionOptions.hidden = !String(s.caption || '').trim();
+    els.captionColorField.hidden = !s.captionColorOn;
+    els.logoSizeValue.textContent = logoSizeLabel(s.logoSize);
+    var png = exportLayout(s, PNG_SIZES[s.pngSize] || EXPORT_SIZE);
+    els.pngSizeHint.textContent = png.width + ' × ' + png.height;
     updatePresetButtons();
+  }
+
+  function presetMatches(p, s) {
+    var gradient = s.fill === 'gradient';
+    return p.fg === s.fg.toLowerCase() && p.bg === s.bg.toLowerCase() &&
+      (p.fg2 ? gradient && p.fg2 === s.fg2.toLowerCase() : !gradient);
   }
 
   function updatePresetButtons() {
     els.presets.forEach(function (btn) {
-      var p = PRESETS[btn.dataset.preset];
-      var active = p.fg === state.style.fg.toLowerCase() && p.bg === state.style.bg.toLowerCase();
+      var active = presetMatches(PRESETS[btn.dataset.preset], state.style);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
@@ -430,46 +702,45 @@
     els.logoRemove.hidden = !has;
     els.logoSizeField.hidden = !has;
     els.logoButtonText.textContent = has ? 'Change logo' : 'Upload logo';
-    els.logoSizeValue.textContent = logoSizeLabel(state.style.logoSize);
   }
 
-  function onColor(which) {
-    return function () {
-      state.style[which] = this.value;
-      els[which + 'Value'].textContent = this.value.toUpperCase();
-      updatePresetButtons();
-      scheduleRender();
-    };
+  // Text, color and slider inputs redraw while you type or drag; the rest on change.
+  function onStyleEvent(e) {
+    var input = e.target;
+    if (!input.dataset || !input.dataset.style) return;
+    var live = input.type === 'text' || input.type === 'color' || input.type === 'range';
+    if (live !== (e.type === 'input')) return;
+    readStyleInput(input);
+    updateStyleUi();
+    if (live) scheduleRender();
+    else render();
   }
-  els.fg.addEventListener('input', onColor('fg'));
-  els.bg.addEventListener('input', onColor('bg'));
+  document.addEventListener('input', onStyleEvent);
+  document.addEventListener('change', onStyleEvent);
 
   els.presets.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var p = PRESETS[btn.dataset.preset];
       state.style.fg = p.fg;
       state.style.bg = p.bg;
+      state.style.fill = p.fg2 ? 'gradient' : 'solid';
+      if (p.fg2) state.style.fg2 = p.fg2;
+      state.style.cornerColorOn = false;
+      state.style.transparent = false;
       writeStyle();
       render();
     });
   });
 
-  document.querySelectorAll('input[name="dot-shape"]').forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      state.style.shape = radio.value;
-      render();
-    });
-  });
-
-  els.caption.addEventListener('input', function () {
-    state.style.caption = els.caption.value;
-    scheduleRender();
-  });
-
-  els.logoSize.addEventListener('input', function () {
-    state.style.logoSize = parseFloat(els.logoSize.value);
-    els.logoSizeValue.textContent = logoSizeLabel(state.style.logoSize);
-    scheduleRender();
+  // Resets the look, but keeps the logo and the text.
+  $('reset-style').addEventListener('click', function () {
+    var keep = state.style;
+    state.style = defaultStyle();
+    state.style.logo = keep.logo;
+    state.style.caption = ownCaption(keep);
+    writeStyle();
+    render();
+    toast('Style reset');
   });
 
   els.logoRemove.addEventListener('click', function () {
@@ -539,33 +810,58 @@
   }
 
   // Picks a caption font size that fits inside the given width.
-  function captionFontSize(text, maxWidth) {
+  function captionFontSize(text, maxWidth, size, font) {
     var ctx = document.createElement('canvas').getContext('2d');
-    var size = CAPTION_FONT;
-    for (; size > 24; size -= 2) {
-      ctx.font = '700 ' + size + 'px ' + FONT;
+    var min = size / 3;
+    for (; size > min; size -= 2) {
+      ctx.font = '700 ' + size + 'px ' + font;
       if (ctx.measureText(text).width <= maxWidth) break;
     }
     return size;
   }
 
-  function exportLayout(style) {
+  // Sizes and positions for the downloaded image (and the preview, in proportion).
+  function exportLayout(style, qrSize) {
+    qrSize = qrSize || EXPORT_SIZE;
+    var unit = qrSize / EXPORT_SIZE;
     var caption = (style.caption || '').trim();
-    var fontSize = caption ? captionFontSize(caption, EXPORT_SIZE) : 0;
-    var captionHeight = caption ? Math.round(CAPTION_FONT * 1.6) : 0;
+    var font = FONTS[style.captionFont] || FONTS.friendly;
+    var border = style.frame === 'border' ? Math.round(BORDER_WIDTH * unit) : 0;
+    var pad = Math.round((PADDING[style.margin] || PADDING.medium) * unit) + border;
+    var baseFont = (CAPTION_SIZES[style.captionSize] || CAPTION_SIZES.medium) * unit;
+    var captionHeight = caption ? Math.round(baseFont * 1.6) : 0;
+    var above = !!caption && style.captionPos === 'above';
     return {
+      qrSize: qrSize,
+      pad: pad,
+      border: border,
+      radius: style.frame === 'rounded' || style.frame === 'border' ? Math.round(FRAME_RADIUS * unit) : 0,
       caption: caption,
-      fontSize: fontSize,
-      width: EXPORT_SIZE + EXPORT_PAD * 2,
-      height: EXPORT_SIZE + EXPORT_PAD * 2 + captionHeight,
-      captionY: EXPORT_PAD + EXPORT_SIZE + Math.round(captionHeight * 0.62)
+      font: font,
+      fontSize: caption ? Math.round(captionFontSize(caption, qrSize, baseFont, font)) : 0,
+      captionHeight: captionHeight,
+      above: above,
+      width: qrSize + pad * 2,
+      height: qrSize + pad * 2 + captionHeight,
+      qrY: pad + (above ? captionHeight : 0),
+      captionY: above ? pad + Math.round(captionHeight * 0.38) : pad + qrSize + Math.round(captionHeight * 0.62)
     };
   }
 
+  function roundedRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
   function makePng(data, style) {
-    var built = makeQr(data, style, EXPORT_SIZE);
+    var layout = exportLayout(style, PNG_SIZES[style.pngSize] || EXPORT_SIZE);
+    var built = makeQr(data, style, layout.qrSize);
     if (built.error) return Promise.reject(new Error(built.error));
-    var layout = exportLayout(style);
     return built.qr.getRawData('png').then(function (blob) {
       var url = URL.createObjectURL(blob);
       return loadImage(url).then(function (img) {
@@ -574,15 +870,25 @@
         canvas.width = layout.width;
         canvas.height = layout.height;
         var ctx = canvas.getContext('2d');
-        ctx.fillStyle = style.bg;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, EXPORT_PAD, EXPORT_PAD, EXPORT_SIZE, EXPORT_SIZE);
+        if (!style.transparent) {
+          ctx.fillStyle = style.bg;
+          roundedRect(ctx, 0, 0, layout.width, layout.height, layout.radius);
+          ctx.fill();
+        }
+        ctx.drawImage(img, layout.pad, layout.qrY, layout.qrSize, layout.qrSize);
         if (layout.caption) {
-          ctx.fillStyle = style.fg;
-          ctx.font = '700 ' + layout.fontSize + 'px ' + FONT;
+          ctx.fillStyle = captionColor(style);
+          ctx.font = '700 ' + layout.fontSize + 'px ' + layout.font;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(layout.caption, layout.width / 2, layout.captionY);
+        }
+        if (layout.border) {
+          var half = layout.border / 2;
+          ctx.strokeStyle = style.fg;
+          ctx.lineWidth = layout.border;
+          roundedRect(ctx, half, half, layout.width - layout.border, layout.height - layout.border, Math.max(0, layout.radius - half));
+          ctx.stroke();
         }
         return new Promise(function (resolve, reject) {
           canvas.toBlob(function (out) {
@@ -595,9 +901,9 @@
   }
 
   function makeSvg(data, style) {
-    var built = makeQr(data, style, EXPORT_SIZE);
-    if (built.error) return Promise.reject(new Error(built.error));
     var layout = exportLayout(style);
+    var built = makeQr(data, style, layout.qrSize);
+    if (built.error) return Promise.reject(new Error(built.error));
     return built.qr.getRawData('svg').then(function (blob) {
       return blob.text();
     }).then(function (source) {
@@ -612,34 +918,51 @@
       root.setAttribute('height', layout.height);
       root.setAttribute('viewBox', '0 0 ' + layout.width + ' ' + layout.height);
 
-      var bg = doc.createElementNS(SVG_NS, 'rect');
-      bg.setAttribute('width', layout.width);
-      bg.setAttribute('height', layout.height);
-      bg.setAttribute('fill', style.bg);
-      root.appendChild(bg);
+      if (!style.transparent) {
+        var bg = doc.createElementNS(SVG_NS, 'rect');
+        bg.setAttribute('width', layout.width);
+        bg.setAttribute('height', layout.height);
+        if (layout.radius) bg.setAttribute('rx', layout.radius);
+        bg.setAttribute('fill', style.bg);
+        root.appendChild(bg);
+      }
 
       var qr = doc.importNode(inner, true);
       if (!qr.getAttribute('viewBox')) {
-        qr.setAttribute('viewBox', '0 0 ' + EXPORT_SIZE + ' ' + EXPORT_SIZE);
+        qr.setAttribute('viewBox', '0 0 ' + layout.qrSize + ' ' + layout.qrSize);
       }
-      qr.setAttribute('x', EXPORT_PAD);
-      qr.setAttribute('y', EXPORT_PAD);
-      qr.setAttribute('width', EXPORT_SIZE);
-      qr.setAttribute('height', EXPORT_SIZE);
+      qr.setAttribute('x', layout.pad);
+      qr.setAttribute('y', layout.qrY);
+      qr.setAttribute('width', layout.qrSize);
+      qr.setAttribute('height', layout.qrSize);
       root.appendChild(qr);
 
       if (layout.caption) {
         var text = doc.createElementNS(SVG_NS, 'text');
         text.setAttribute('x', layout.width / 2);
         text.setAttribute('y', layout.captionY);
-        text.setAttribute('fill', style.fg);
-        text.setAttribute('font-family', FONT.replace(/"/g, "'"));
+        text.setAttribute('fill', captionColor(style));
+        text.setAttribute('font-family', layout.font.replace(/"/g, "'"));
         text.setAttribute('font-size', layout.fontSize);
         text.setAttribute('font-weight', '700');
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'central');
         text.textContent = layout.caption;
         root.appendChild(text);
+      }
+
+      if (layout.border) {
+        var half = layout.border / 2;
+        var border = doc.createElementNS(SVG_NS, 'rect');
+        border.setAttribute('x', half);
+        border.setAttribute('y', half);
+        border.setAttribute('width', layout.width - layout.border);
+        border.setAttribute('height', layout.height - layout.border);
+        border.setAttribute('rx', Math.max(0, layout.radius - half));
+        border.setAttribute('fill', 'none');
+        border.setAttribute('stroke', style.fg);
+        border.setAttribute('stroke-width', layout.border);
+        root.appendChild(border);
       }
 
       var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(root);
@@ -660,7 +983,7 @@
 
   function download(kind, record) {
     var type = record ? record.type : state.type;
-    var style = record ? record.style : state.style;
+    var style = record ? recordStyle(record) : state.style;
     var result = record ? C.build(record.type, record.fields) : state.result;
     if (!result.data) {
       toast(result.error || 'Nothing to download yet.');
@@ -712,6 +1035,12 @@
       toast('Could not save. Your browser storage may be full – delete some saved codes or use a smaller logo.');
       return false;
     }
+  }
+
+  // Codes saved before newer style options existed get the defaults for them.
+  function recordStyle(record) {
+    // Codes saved before templates existed did not pick one.
+    return Object.assign(defaultStyle(), { template: null }, clone(record.style || {}));
   }
 
   function currentRecord(id) {
@@ -768,7 +1097,7 @@
   function openRecord(record) {
     state.fields = defaultFields();
     state.fields[record.type] = Object.assign(state.fields[record.type], clone(record.fields));
-    state.style = Object.assign(defaultStyle(), clone(record.style));
+    state.style = recordStyle(record);
     writeFields();
     writeStyle();
     setEditing(record);
@@ -819,10 +1148,10 @@
       var thumb = document.createElement('button');
       thumb.type = 'button';
       thumb.className = 'code-thumb';
-      thumb.style.background = record.style.bg;
+      paintBackground(thumb, recordStyle(record));
       thumb.setAttribute('aria-label', 'Open ' + record.name);
       if (result.data) {
-        var built = makeQr(result.data, record.style, THUMB_SIZE);
+        var built = makeQr(result.data, recordStyle(record), THUMB_SIZE);
         if (built.qr) built.qr.append(thumb);
       }
       thumb.addEventListener('click', function () { openRecord(record); });
