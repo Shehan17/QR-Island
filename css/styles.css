@@ -339,6 +339,9 @@ textarea {
     grid-area: download;
     position: sticky;
     top: 84px;
+    /* Short screens: scroll inside the card so Save stays reachable. */
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
   }
 
   .my-codes {
@@ -584,10 +587,31 @@ textarea {
   min-width: 0;
 }
 
-.step-style > .field + .field,
-.step-style > .field-row + .field,
-.step-style > .field + .field-row {
-  margin-top: 20px;
+.style-group,
+.style-sub {
+  display: grid;
+  gap: 16px;
+}
+
+.style-group + .style-group {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1.5px dashed var(--border);
+}
+
+.group-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.style-reset {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
 }
 
 .label,
@@ -712,7 +736,7 @@ textarea:focus {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%);
+  background: linear-gradient(135deg, var(--a), var(--a2, var(--a)) 50%, var(--b) 50%);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
@@ -757,6 +781,18 @@ textarea:focus {
   border-radius: 10px;
 }
 
+.color-field.solo {
+  max-width: 240px;
+}
+
+.color-field.is-off {
+  opacity: 0.45;
+}
+
+.color-field.is-off .color-input {
+  cursor: not-allowed;
+}
+
 .color-value {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.9rem;
@@ -767,6 +803,20 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+.segmented.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.segmented.cols-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 480px) {
+  .segmented.cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .segmented label {
@@ -815,16 +865,98 @@ textarea:focus {
   background: currentColor;
 }
 
+.shape-icon,
+.corner-icon,
+.frame-icon,
+.fill-icon {
+  flex: none;
+}
+
 .shape-square {
   border-radius: 2px;
 }
 
 .shape-rounded {
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 .shape-dots {
   border-radius: 50%;
+}
+
+.shape-classy {
+  border-radius: 7px 0;
+}
+
+.shape-leaf {
+  border-radius: 7px 2px;
+}
+
+.shape-smooth {
+  width: 20px;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.corner-icon {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid currentColor;
+}
+
+.corner-icon::after {
+  content: "";
+  position: absolute;
+  inset: 2.5px;
+  background: currentColor;
+}
+
+.corner-square,
+.corner-square::after {
+  border-radius: 1px;
+}
+
+.corner-rounded {
+  border-radius: 6px;
+}
+
+.corner-rounded::after,
+.corner-circle,
+.corner-circle::after {
+  border-radius: 50%;
+}
+
+.frame-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  opacity: 0.35;
+}
+
+.frame-rounded {
+  border-radius: 5px;
+}
+
+.frame-border {
+  border-radius: 5px;
+  border: 2.5px solid currentColor;
+  background: none;
+  opacity: 1;
+}
+
+.fill-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.fill-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--focus));
 }
 
 .logo-row {
@@ -874,22 +1006,53 @@ textarea:focus {
 }
 
 .qr-frame {
+  --pad: 6.9%;
+  --cap-h: 9.93cqi;
+  --border-w: 0;
+  --border-c: transparent;
   container-type: inline-size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 300px);
-  border-radius: 18px;
+  border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 10px 30px rgba(23, 54, 61, 0.14);
   overflow: hidden;
   transition: background-color 0.15s;
 }
 
-/* Margins match the downloaded image: 80px padding on a 1160px wide image. */
+/* Margins match the downloaded image (set from the export layout in app.js). */
 .qr-holder {
-  margin: 6.9%;
+  margin: var(--pad);
   aspect-ratio: 1;
 }
 
 .qr-frame.has-caption .qr-holder {
   margin-bottom: 0;
+}
+
+.qr-frame.has-caption.caption-above .qr-holder {
+  margin-top: 0;
+  margin-bottom: var(--pad);
+}
+
+.qr-frame.has-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-w) solid var(--border-c);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Shown behind transparent QR codes. */
+.checker {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #e4e4e4 25%, transparent 25%, transparent 75%, #e4e4e4 75%),
+    linear-gradient(45deg, #e4e4e4 25%, transparent 25%, transparent 75%, #e4e4e4 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
 }
 
 .qr-holder svg,
@@ -899,15 +1062,36 @@ textarea:focus {
   height: auto;
 }
 
+/* The text center sits 62% down its band below the QR (38% when above), like the export. */
 .qr-caption {
-  margin: 0 6.9% 6.9%;
+  order: 1;
+  margin: 0 var(--pad) var(--pad);
+  padding-top: calc(var(--cap-h) * 0.24);
   font-family: "Trebuchet MS", "Segoe UI", Arial, Helvetica, sans-serif;
   font-weight: 700;
   font-size: 18px;
   font-size: 6.2cqi;
-  line-height: 10cqi;
+  line-height: calc(var(--cap-h) * 0.76);
   text-align: center;
   white-space: nowrap;
+}
+
+.caption-above .qr-caption {
+  order: -1;
+  margin: var(--pad) var(--pad) 0;
+  padding: 0 0 calc(var(--cap-h) * 0.24);
+}
+
+.png-size {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.png-size .segmented span {
+  min-height: 40px;
 }
 
 .preview-empty {

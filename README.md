@@ -15,10 +15,11 @@
 **Type → Style → Download.** That's it.
 
 - 🔗 **6 QR types:** Link, Text, WiFi, Contact, WhatsApp, Location
-- 🎨 **Your style:** colors, dot shapes, your logo, and a label like "Scan me"
-- 🌊 **Ready-made looks:** Ocean Blue, Sunset Orange, Palm Green
+- 🎨 **Your style:** solid or gradient colors, 6 dot shapes, corner styles and colors, transparent background
+- 🖼️ **Make it yours:** add your logo, a frame or border, and a label like "Scan me" (pick font, size, color, above or below)
+- 🌊 **Ready-made looks:** Ocean Blue, Sunset Orange, Palm Green, Coral Reef, Lagoon, Tropical
 - ✅ **Scan check:** tells you if your QR code will actually scan
-- 💾 **Download** as PNG or SVG, and save your codes for later
+- 💾 **Download** as PNG (small, medium or large) or SVG, and save your codes for later
 - 📷 **Scan** any QR code with your camera or from a photo
 - 🌙 **Light and dark mode**, made for phones first
 

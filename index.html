@@ -183,69 +183,222 @@
       <section class="card step-style" aria-labelledby="step2-title">
         <h2 id="step2-title"><span class="step-num">2</span> Style</h2>
 
-        <div class="field">
-          <span class="label" id="presets-label">Ready color sets</span>
-          <div class="presets" role="group" aria-labelledby="presets-label">
-            <button type="button" class="preset" data-preset="ocean">
-              <span class="swatch" style="--a:#0b4f6c;--b:#e6f5fa"></span>Ocean Blue
-            </button>
-            <button type="button" class="preset" data-preset="sunset">
-              <span class="swatch" style="--a:#b4410f;--b:#fff1e3"></span>Sunset Orange
-            </button>
-            <button type="button" class="preset" data-preset="palm">
-              <span class="swatch" style="--a:#1d6a3a;--b:#edf8ef"></span>Palm Green
-            </button>
+        <div class="style-group">
+          <h3 class="group-title">Colors</h3>
+
+          <div class="field">
+            <span class="label" id="presets-label">Ready color sets</span>
+            <div class="presets" role="group" aria-labelledby="presets-label">
+              <button type="button" class="preset" data-preset="ocean">
+                <span class="swatch" style="--a:#0b4f6c;--b:#e6f5fa"></span>Ocean Blue
+              </button>
+              <button type="button" class="preset" data-preset="sunset">
+                <span class="swatch" style="--a:#b4410f;--b:#fff1e3"></span>Sunset Orange
+              </button>
+              <button type="button" class="preset" data-preset="palm">
+                <span class="swatch" style="--a:#1d6a3a;--b:#edf8ef"></span>Palm Green
+              </button>
+              <button type="button" class="preset" data-preset="coral">
+                <span class="swatch" style="--a:#a8233d;--b:#fff0f1"></span>Coral Reef
+              </button>
+              <button type="button" class="preset" data-preset="lagoon">
+                <span class="swatch" style="--a:#0b6e79;--a2:#1d3f94;--b:#eaf7f8"></span>Lagoon
+              </button>
+              <button type="button" class="preset" data-preset="tropical">
+                <span class="swatch" style="--a:#c2410c;--a2:#a3165a;--b:#fff5ea"></span>Tropical
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="field-row">
-          <label class="field color-field">
-            <span class="label">QR color</span>
-            <span class="color-input">
-              <input type="color" id="fg-color" value="#12343b">
-              <span class="color-value" id="fg-color-value">#12343B</span>
-            </span>
-          </label>
-          <label class="field color-field">
-            <span class="label">Background color</span>
-            <span class="color-input">
-              <input type="color" id="bg-color" value="#ffffff">
-              <span class="color-value" id="bg-color-value">#FFFFFF</span>
-            </span>
-          </label>
-        </div>
-
-        <div class="field">
-          <span class="label" id="shape-label">Dot shape</span>
-          <div class="segmented" role="radiogroup" aria-labelledby="shape-label">
-            <label><input type="radio" name="dot-shape" value="square" checked><span><i class="shape-icon shape-square" aria-hidden="true"></i>Square</span></label>
-            <label><input type="radio" name="dot-shape" value="rounded"><span><i class="shape-icon shape-rounded" aria-hidden="true"></i>Rounded</span></label>
-            <label><input type="radio" name="dot-shape" value="dots"><span><i class="shape-icon shape-dots" aria-hidden="true"></i>Dots</span></label>
+          <div class="field">
+            <span class="label" id="fill-label">Color fill</span>
+            <div class="segmented cols-2" role="radiogroup" aria-labelledby="fill-label">
+              <label><input type="radio" name="fill" value="solid" data-style="fill" checked><span><i class="fill-icon fill-solid" aria-hidden="true"></i>Solid</span></label>
+              <label><input type="radio" name="fill" value="gradient" data-style="fill"><span><i class="fill-icon fill-gradient" aria-hidden="true"></i>Gradient</span></label>
+            </div>
           </div>
-        </div>
 
-        <div class="field">
-          <span class="label">Logo in the center (optional)</span>
-          <div class="logo-row">
-            <label class="btn btn-ghost btn-small file-btn">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
-              <span id="logo-button-text">Upload logo</span>
-              <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif">
+          <div class="field-row">
+            <label class="field color-field">
+              <span class="label" id="fg-label">QR color</span>
+              <span class="color-input">
+                <input type="color" id="fg-color" data-style="fg" value="#12343b">
+                <span class="color-value" data-color-for="fg">#12343B</span>
+              </span>
             </label>
-            <img id="logo-thumb" class="logo-thumb" alt="Your logo" hidden>
-            <button type="button" class="btn btn-text btn-small" id="logo-remove" hidden>Remove logo</button>
+            <label class="field color-field" id="bg-color-field">
+              <span class="label">Background color</span>
+              <span class="color-input">
+                <input type="color" id="bg-color" data-style="bg" value="#ffffff">
+                <span class="color-value" data-color-for="bg">#FFFFFF</span>
+              </span>
+            </label>
           </div>
-          <div class="range-field" id="logo-size-field" hidden>
-            <label for="logo-size">Logo size</label>
-            <input type="range" id="logo-size" min="0.2" max="0.8" step="0.05" value="0.4">
-            <output id="logo-size-value" for="logo-size">Medium</output>
+
+          <div class="field-row" id="gradient-options" hidden>
+            <label class="field color-field">
+              <span class="label">End color</span>
+              <span class="color-input">
+                <input type="color" id="fg2-color" data-style="fg2" value="#0e7c86">
+                <span class="color-value" data-color-for="fg2">#0E7C86</span>
+              </span>
+            </label>
+            <label class="field">
+              <span class="label">Direction</span>
+              <select id="gradient-type" data-style="gradientType">
+                <option value="diagonal">Diagonal</option>
+                <option value="across">Left to right</option>
+                <option value="down">Top to bottom</option>
+                <option value="radial">From the center</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="corner-color-on" data-style="cornerColorOn">
+            Different color for the corners
+          </label>
+          <label class="field color-field solo" id="corner-color-field" hidden>
+            <span class="label">Corner color</span>
+            <span class="color-input">
+              <input type="color" id="corner-color" data-style="cornerColor" value="#c2410c">
+              <span class="color-value" data-color-for="cornerColor">#C2410C</span>
+            </span>
+          </label>
+
+          <label class="check">
+            <input type="checkbox" id="transparent-bg" data-style="transparent">
+            Transparent background
+          </label>
+        </div>
+
+        <div class="style-group">
+          <h3 class="group-title">Shapes</h3>
+
+          <div class="field">
+            <span class="label" id="shape-label">Dot shape</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="shape-label">
+              <label><input type="radio" name="dot-shape" value="square" data-style="shape" checked><span><i class="shape-icon shape-square" aria-hidden="true"></i>Square</span></label>
+              <label><input type="radio" name="dot-shape" value="rounded" data-style="shape"><span><i class="shape-icon shape-rounded" aria-hidden="true"></i>Rounded</span></label>
+              <label><input type="radio" name="dot-shape" value="dots" data-style="shape"><span><i class="shape-icon shape-dots" aria-hidden="true"></i>Dots</span></label>
+              <label><input type="radio" name="dot-shape" value="classy" data-style="shape"><span><i class="shape-icon shape-classy" aria-hidden="true"></i>Classy</span></label>
+              <label><input type="radio" name="dot-shape" value="classy-rounded" data-style="shape"><span><i class="shape-icon shape-leaf" aria-hidden="true"></i>Leaf</span></label>
+              <label><input type="radio" name="dot-shape" value="extra-rounded" data-style="shape"><span><i class="shape-icon shape-smooth" aria-hidden="true"></i>Smooth</span></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="corner-shape-label">Corner shape</span>
+            <div class="segmented cols-4" role="radiogroup" aria-labelledby="corner-shape-label">
+              <label><input type="radio" name="corner-shape" value="auto" data-style="cornerShape" checked><span>Match dots</span></label>
+              <label><input type="radio" name="corner-shape" value="square" data-style="cornerShape"><span><i class="corner-icon corner-square" aria-hidden="true"></i>Square</span></label>
+              <label><input type="radio" name="corner-shape" value="rounded" data-style="cornerShape"><span><i class="corner-icon corner-rounded" aria-hidden="true"></i>Rounded</span></label>
+              <label><input type="radio" name="corner-shape" value="circle" data-style="cornerShape"><span><i class="corner-icon corner-circle" aria-hidden="true"></i>Circle</span></label>
+            </div>
           </div>
         </div>
 
-        <label class="field">
-          <span class="label">Text under the QR code (optional)</span>
-          <input type="text" id="caption" maxlength="40" placeholder="Scan me">
-        </label>
+        <div class="style-group">
+          <h3 class="group-title">Logo</h3>
+
+          <div class="field">
+            <span class="label">Logo in the center (optional)</span>
+            <div class="logo-row">
+              <label class="btn btn-ghost btn-small file-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+                <span id="logo-button-text">Upload logo</span>
+                <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif">
+              </label>
+              <img id="logo-thumb" class="logo-thumb" alt="Your logo" hidden>
+              <button type="button" class="btn btn-text btn-small" id="logo-remove" hidden>Remove logo</button>
+            </div>
+            <div class="range-field" id="logo-size-field" hidden>
+              <label for="logo-size">Logo size</label>
+              <input type="range" id="logo-size" data-style="logoSize" min="0.2" max="0.8" step="0.05" value="0.4">
+              <output id="logo-size-value" for="logo-size">Medium</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="style-group">
+          <h3 class="group-title">Frame</h3>
+
+          <div class="field">
+            <span class="label" id="frame-label">Frame</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="frame-label">
+              <label><input type="radio" name="frame" value="none" data-style="frame" checked><span><i class="frame-icon frame-none" aria-hidden="true"></i>None</span></label>
+              <label><input type="radio" name="frame" value="rounded" data-style="frame"><span><i class="frame-icon frame-rounded" aria-hidden="true"></i>Rounded</span></label>
+              <label><input type="radio" name="frame" value="border" data-style="frame"><span><i class="frame-icon frame-border" aria-hidden="true"></i>Border</span></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label" id="margin-label">Space around the QR code</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="margin-label">
+              <label><input type="radio" name="margin" value="small" data-style="margin"><span>Small</span></label>
+              <label><input type="radio" name="margin" value="medium" data-style="margin" checked><span>Medium</span></label>
+              <label><input type="radio" name="margin" value="large" data-style="margin"><span>Large</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="style-group">
+          <h3 class="group-title">Text</h3>
+
+          <label class="field">
+            <span class="label">Text on the image (optional)</span>
+            <input type="text" id="caption" data-style="caption" maxlength="40" placeholder="Scan me">
+          </label>
+
+          <div class="style-sub" id="caption-options" hidden>
+            <div class="field">
+              <span class="label" id="caption-pos-label">Position</span>
+              <div class="segmented cols-2" role="radiogroup" aria-labelledby="caption-pos-label">
+                <label><input type="radio" name="caption-pos" value="below" data-style="captionPos" checked><span>Below the QR</span></label>
+                <label><input type="radio" name="caption-pos" value="above" data-style="captionPos"><span>Above the QR</span></label>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field">
+                <span class="label">Font</span>
+                <select id="caption-font" data-style="captionFont">
+                  <option value="friendly">Friendly</option>
+                  <option value="clean">Clean</option>
+                  <option value="classic">Classic</option>
+                  <option value="typewriter">Typewriter</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label">Size</span>
+                <select id="caption-size" data-style="captionSize">
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="check">
+              <input type="checkbox" id="caption-color-on" data-style="captionColorOn">
+              Different text color
+            </label>
+            <label class="field color-field solo" id="caption-color-field" hidden>
+              <span class="label">Text color</span>
+              <span class="color-input">
+                <input type="color" id="caption-color" data-style="captionColor" value="#0e7c86">
+                <span class="color-value" data-color-for="captionColor">#0E7C86</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="style-reset">
+          <button type="button" class="btn btn-text btn-small" id="reset-style">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>
+            Reset style
+          </button>
+        </div>
       </section>
 
       <!-- Preview + Step 3: Download -->
@@ -265,6 +418,15 @@
 
         <p class="scan-check" id="scan-check" role="status" aria-live="polite" hidden></p>
 
+        <div class="png-size">
+          <span class="label" id="png-size-label">PNG size</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="png-size-label">
+            <label><input type="radio" name="png-size" value="small" data-style="pngSize"><span>Small</span></label>
+            <label><input type="radio" name="png-size" value="medium" data-style="pngSize" checked><span>Medium</span></label>
+            <label><input type="radio" name="png-size" value="large" data-style="pngSize"><span>Large</span></label>
+          </div>
+        </div>
+
         <div class="download-row">
           <button type="button" class="btn btn-primary" id="download-png" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg>
@@ -275,7 +437,7 @@
             Download SVG
           </button>
         </div>
-        <p class="hint center">PNG is best for sharing. SVG stays sharp at any size, great for printing.</p>
+        <p class="hint center">PNG (<span id="png-size-hint">1160 × 1160</span> pixels) is best for sharing. SVG stays sharp at any size, great for printing.</p>
 
         <div class="save-box">
           <label class="field">
