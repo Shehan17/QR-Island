@@ -287,6 +287,9 @@
     return problems;
   }
 
+  var ICON_OK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var ICON_WARN = '<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>';
+
   function renderScanCheck(valid) {
     var el = els.scanCheck;
     if (!valid) {
@@ -300,7 +303,7 @@
     var icon = document.createElement('span');
     icon.className = 'scan-check-icon';
     icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = problems.length ? '!' : '✓';
+    icon.innerHTML = problems.length ? ICON_WARN : ICON_OK;
     el.appendChild(icon);
     var body = document.createElement('span');
     if (!problems.length) {
@@ -526,6 +529,16 @@
     });
     updateLogoUi();
     updateStyleUi();
+    openUsedGroups();
+  }
+
+  // Opens the style groups that hold non-default settings, so nothing is hidden.
+  function openUsedGroups() {
+    var s = state.style;
+    var d = defaultStyle();
+    if (s.logo) $('group-logo').open = true;
+    if (String(s.caption || '').trim()) $('group-text').open = true;
+    if (s.frame !== d.frame || s.margin !== d.margin) $('group-frame').open = true;
   }
 
   // Shows and hides the extra fields, and refreshes labels that follow the style.

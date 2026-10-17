@@ -40,5 +40,5 @@ Push to `main` and GitHub Actions publishes it to GitHub Pages.
 ---
 
 <div align="center">
-Built with <a href="https://github.com/kozakdenys/qr-code-styling">qr-code-styling</a> and <a href="https://github.com/mebjas/html5-qrcode">html5-qrcode</a> · Made with 🌴
+Built with <a href="https://github.com/kozakdenys/qr-code-styling">qr-code-styling</a> and <a href="https://github.com/mebjas/html5-qrcode">html5-qrcode</a> · Fonts: Fredoka and Nunito (self-hosted) · Made with 🌴
 </div>
